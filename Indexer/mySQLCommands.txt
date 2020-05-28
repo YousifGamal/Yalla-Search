@@ -1,0 +1,15 @@
+CREATE DATABASE testdb;  // to create db
+
+We create a new testdb database
+
+CREATE USER 'Gellesh'@'localhost' IDENTIFIED BY 'Gellesh123';  We create a new user
+
+ USE testdb; // Database changed to what you want
+
+
+GRANT ALL ON testdb.* TO 'Gellesh'@'localhost';    Grant privlliage to this user
+
+
+sudo service mysql status
+sudo service mysql stop
+sudo service mysql start
