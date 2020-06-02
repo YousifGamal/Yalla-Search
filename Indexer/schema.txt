@@ -48,10 +48,10 @@ CREATE TABLE `Crawled_URLS` (
 DROP TABLE IF EXISTS words;
 CREATE TABLE words(
 	wordID int not NULL AUTO_INCREMENT ,
-	word tinytext ,
+	word varchar(500) ,
 	documentsNumber int,
-	PRIMARY KEY (wordID)
-
+	PRIMARY KEY (wordID),
+    INDEX USING HASH (word)
     
 );
 

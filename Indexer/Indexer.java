@@ -167,13 +167,15 @@ public class Indexer implements Runnable{
         	}
 
         String publishedDate = getPublishDate(doc);
-        String pageDescription = this.get_describtion(doc);
-        String pageTitle = this.get_title(doc);
+        String pageDescription = get_describtion(doc);
+        String pageTitle = get_title(doc);
         
         boolean newDoc = false;
 		try {
 			System.out.println("Document = "+String.valueOf(docID)+" parsing "+String.valueOf(total_words));
+			if(total_words > 0) {
 			newDoc = db.insertNewDocument(docID, total_words,finalWords, finalTags, finalPosition, df,publishedDate,pageDescription,pageTitle);
+			}
 			//db.testFn(finalWords, docID, finalTags, finalPosition, newDoc, df);
 		} catch (SQLException e1) {
 			// TODO Auto-generated catch block
@@ -430,13 +432,14 @@ public class Indexer implements Runnable{
 		dataBase db = new dataBase("testdb");
 		List<Object> docs= new ArrayList<Object>();
 		List<Object> imgs= new ArrayList<Object>();
+		int maxIterations = 100;
 		
-		
-		
+		int it = 0;
 		boolean noDocs = false;
 		boolean noImgs = false;
-		
-		while((noDocs == false) || (noImgs == false)) {
+		long start = System.currentTimeMillis();
+		while(( (noDocs == false) || (noImgs == false) ) && it<maxIterations ) {
+			it++;
 			List<Thread> threads = new ArrayList<Thread>();
 			List<Integer> ids = new ArrayList<Integer>();
 			List<String> htmls = new ArrayList<String>();
@@ -476,7 +479,11 @@ public class Indexer implements Runnable{
 			for(int k = 0; k<threads.size(); k++) {
 				threads.get(k).join();
 			}
-			}
+		}
+		long end = System.currentTimeMillis();
+	      //finding the time difference and converting it into seconds
+	    float sec = (end - start) / 1000F;
+	    System.out.println("All threads joined program is terminating ... took " + sec +" seconds");
 		
 		//test case
 		

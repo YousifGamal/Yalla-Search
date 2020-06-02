@@ -48,6 +48,7 @@ public class dataBase {
 			String pageDescription,String pageTitle) throws SQLException {
 		
 		synchronized (o1) {
+			//System.out.println("starting adding document for doc "+String.valueOf(docID));
 			// check if the document already exist
 			String selectQuery = "select * from documents where documentID = ?";
 			PreparedStatement select = c.prepareStatement(selectQuery);
@@ -117,58 +118,90 @@ public class dataBase {
 	
 	public void insertNewWord(List<String> word, int docId, List<ArrayList<Boolean> > tags ,List<String> positions, List<Float> df) throws SQLException{
 		//check if new word
-		List<Integer> wordID = new ArrayList<Integer>(); //word ID
+		//System.out.println("starting adding words for doc "+String.valueOf(docId)+",  words = "+String.valueOf(word.size()));
 		c.setAutoCommit(false);
-		for(int i = 0; i<word.size(); i++) {
-			
-			boolean newWord = true;//flag for new word
-			
-			String newWordQuery = "select wordID from words where word = ?";
-			PreparedStatement select = c.prepareStatement(newWordQuery);
-			
-			select.setString(1, word.get(i));
-			ResultSet rs = select.executeQuery();
-			if(rs.next()) {// if not new
-				newWord = false;
-				wordID.add(rs.getInt(1));
-			}
-			
-			if(newWord) {
-				//Insert the new Word
-				String query = "INSERT INTO words (wordID, word, documentsNumber) VALUES (0, ?, 1);";
-				PreparedStatement pst = c.prepareStatement(query,Statement.RETURN_GENERATED_KEYS);
-				pst.setString(1, word.get(i));
-				int done = pst.executeUpdate(); 
-				/*if (done > 0) {
-			        System.out.println("New Word Record successfully");
-			    } */   
-				rs = pst.getGeneratedKeys();
-				while(rs.next()) {
-					wordID.add(rs.getInt(1));
-				}
+		List<Integer> wordID = new ArrayList<Integer>(); //word ID/
+		List<Integer> foundIDs = new ArrayList<Integer>();
+		List<String> foundWords = new ArrayList<String>();
+		List<Integer> notFoundIDs = new ArrayList<Integer>();
+		List<String> notFoundWords = new ArrayList<String>();
+		
+		String idQuery = "Select ";
+		int total_words = word.size();
+		for(int i = 0; i<total_words; i++) {
+			if(i == total_words-1) {
+				idQuery += "(select wordID FROM words WHERE  word = '"+word.get(i)+"')   AS table_"+word.get(i);
 			}
 			else {
-				String query = "UPDATE words set documentsNumber = documentsNumber + 1 where wordID = ?";
-				PreparedStatement pst = c.prepareStatement(query);
-				pst.setInt(1, wordID.get(i));
-				int done = pst.executeUpdate(); 
-				/*if (done > 0) {
-			        System.out.println("INC docNumber Word Record successfully");
-			    }*/
+				idQuery += "(select wordID FROM words WHERE  word = '"+word.get(i)+"')   AS table_"+word.get(i)+", ";
 			}
 		}
-		c.commit();
-		c.setAutoCommit(true);
-		//System.out.println("Document = "+String.valueOf(docId)+" Words part 1");
+		//System.out.println(idQuery);
+		PreparedStatement select = c.prepareStatement(idQuery);
+		ResultSet rs = select.executeQuery();
+		rs.next();
+		for(int i = 0; i<total_words; i++) {
+			int tempID = rs.getInt(i+1);
+			if(rs.wasNull()) {
+				//null
+				notFoundWords.add(word.get(i));
+				wordID.add(-1);
+			}
+			else {
+				foundIDs.add(tempID);
+				wordID.add(tempID);
+				foundWords.add(word.get(i));
+			}
+		}
+		if(notFoundWords.size() > 0) {
+			// go add first word and get it's id 
+			String firstWordQuery = "INSERT INTO words (wordID, word, documentsNumber) VALUES (0, ?, 1);";
+			PreparedStatement add = c.prepareStatement(firstWordQuery,Statement.RETURN_GENERATED_KEYS);
+			add.setString(1, notFoundWords.get(0));
+			int done = add.executeUpdate();   
+			rs = add.getGeneratedKeys();
+			rs.next();
+			notFoundIDs.add(rs.getInt(1));
+			// calculate rest of ids from the first is
+			for(int i = 1; i<notFoundWords.size();i++) {
+				notFoundIDs.add(notFoundIDs.get(i-1)+1);
+			}
+			// add the rest of not found words
+			String addWordsQuery = "INSERT INTO words (wordID, word, documentsNumber) VALUES (0, ?, 1);";
+			add = c.prepareStatement(addWordsQuery);
+			for(int i = 1; i<notFoundWords.size();i++) {
+				add.setString(1, notFoundWords.get(i));
+				add.addBatch();
+			}
+			add.executeBatch();
+		}
+		
+		// update the found words
+		String updateWordsQuery = "UPDATE words set documentsNumber = documentsNumber + 1 where wordID = ?";
+		PreparedStatement update = c.prepareStatement(updateWordsQuery);
+		for(int i = 0; i<foundIDs.size();i++) {
+			update.setInt(1, foundIDs.get(i));
+			update.addBatch();
+		}
+		update.executeBatch();
+		
+		
+		//add all to the search index
+		//fill the word id
+		int z=0;
+		for(int i = 0; i<wordID.size(); i++) {
+			if(wordID.get(i) == -1) {
+				wordID.set(i, notFoundIDs.get(z));
+				z++;
+			}
+		}
 		String query = "INSERT INTO searchIndex (documentID, wordID, title, h1, h2, strong, b, "
 				+ "description, df, positions) "
 				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 		PreparedStatement pst = c.prepareStatement(query);
-		c.setAutoCommit(false);
+		//
 		for(int i = 0; i<word.size(); i++) {
 			// insert in search index
-			
-			
 			pst.setInt(1, docId);
 			pst.setInt(2,wordID.get(i));
 			for(int j = 0; j<tags.get(i).size(); j++) {
@@ -176,20 +209,21 @@ public class dataBase {
 			}
 			pst.setFloat(9, df.get(i));
 			pst.setString(10, positions.get(i));
-			
-			pst.executeUpdate(); 
+			pst.addBatch();
+			 
 			//if (done > 0) {
 		      //  System.out.println("Added New search index Record successfully");
 		    //}
 		}
-		
+		pst.executeBatch();
 		c.commit();
 		c.setAutoCommit(true);
+		//System.out.println("fininshed adding words for doc "+String.valueOf(docId));
 		
 	}
 		
 	public List<Object> getDocuments() throws SQLException{
-		String Query = "Select * from Crawled_URLS where Changed = 1 limit 10;";
+		String Query = "Select * from Crawled_URLS where Changed = 1 and Html_doc != \"\" limit 20;";
 		PreparedStatement pst = c.prepareStatement(Query);
 		ResultSet rs = pst.executeQuery();
 		List<Object> docs= new ArrayList<Object>();
@@ -213,7 +247,7 @@ public class dataBase {
 	};
 	
 	public List<Object> getImages() throws SQLException{
-		String Query = "select ID, ALT from Imgs_URLS where NEW = 1 limit 10";
+		String Query = "select ID, ALT from Imgs_URLS where NEW = 1 limit 50";
 		PreparedStatement pst = c.prepareStatement(Query);
 		ResultSet rs = pst.executeQuery();
 		List<Object> imgs= new ArrayList<Object>();
@@ -227,8 +261,9 @@ public class dataBase {
 		c.setAutoCommit(false);
 		for(int i = 0; i<imgs.size(); i+=2) {
 			upst.setInt(1, (int)imgs.get(i));
-			upst.executeUpdate();
+			upst.addBatch();
 		}
+		upst.executeBatch();
 		c.commit();
 		c.setAutoCommit(true);
 		
