@@ -15,7 +15,7 @@ public class Crawler_Db {
 	final static String url1 = "jdbc:mysql://localhost:3306/" + Db_name;
 	final static String user = "Gellesh";
 	final static String password = "Gellesh123";
-	final private int Total_Links = 7000;
+	final private int Total_Links = 12000;
 	private  Connection c = null;
 	private static Statement stmt = null;
 	private Object o1 = new Object();
@@ -114,58 +114,97 @@ public class Crawler_Db {
 	public void Insert_seeds() {
 		String str;
 		UrlChecked checker = new UrlChecked();
-		str = "https://en.wikipedia.org/wiki/Main_Page";
-		str = checker.Normalize_URl(str);
-		Insert_Url(str);
 		str = "https://www.bbc.com/news";
 		str = checker.Normalize_URl(str);
 		Insert_Url(str);
+		
 		str = "https://www.imdb.com/chart/top/";
 		str = checker.Normalize_URl(str);
 		Insert_Url(str);
+		
 		str = "https://www.fifa.com/";
 		str = checker.Normalize_URl(str);
 		Insert_Url(str);
+		
 		str = "https://www.goal.com/en";
 		str = checker.Normalize_URl(str);
 		Insert_Url(str);
+		
 		str = "https://www.theguardian.com/news";
 		str = checker.Normalize_URl(str);
 		Insert_Url(str);
+		
 		str = "https://www.imdb.com/search/name/?gender=male,female&ref_=rlm";
 		str = checker.Normalize_URl(str);
 		Insert_Url(str);
+		
 		str = "https://www.billboard.com/charts";
 		str = checker.Normalize_URl(str);
 		Insert_Url(str);
+		
 		str = "https://edition.cnn.com/world";
 		str = checker.Normalize_URl(str);
 		Insert_Url(str);
+		
 		str = "https://www.uefa.com/";
 		str = checker.Normalize_URl(str);
 		Insert_Url(str);
+		
 		str = "https://www.javatpoint.com/java-tutorial";
 		str = checker.Normalize_URl(str);
 		Insert_Url(str);
+		
 		str = "https://www.cbc.ca/news";
 		str = checker.Normalize_URl(str);
 		Insert_Url(str);
+		
 		str = "https://www.gsmarena.com/";
 		str = checker.Normalize_URl(str);
 		Insert_Url(str);
+		
 		str = "https://www.apple.com";
 		str = checker.Normalize_URl(str);
 		Insert_Url(str);
+		
 		str = "https://www.amazon.com/";
 		str = checker.Normalize_URl(str);
 		Insert_Url(str);
+		
 		str = "https://abcnews.go.com/";
 		str = checker.Normalize_URl(str);
 		Insert_Url(str);
-		str = "https://dmoz-odp.org";
+		
+		str = "https://en.wikipedia.org/wiki/Main_Page";
 		str = checker.Normalize_URl(str);
 		Insert_Url(str);
 		
+		str = "https://theoatmeal.com";
+		str = checker.Normalize_URl(str);
+		Insert_Url(str);
+		
+		str = "https://www.imdb.com";
+		str = checker.Normalize_URl(str);
+		Insert_Url(str);
+		
+		str = "https://www.w3schools.com";
+		str = checker.Normalize_URl(str);
+		Insert_Url(str);
+		
+		str = "https://www.amazon.com/Notebooks-Laptop-Computers/b?ie=UTF8&node=565108";
+		str = checker.Normalize_URl(str);
+		Insert_Url(str);
+		
+		str = "https://me.pcmag.com";
+		str = checker.Normalize_URl(str);
+		Insert_Url(str);
+		
+		str = "https://en.wikipedia.org/wiki/List_of_most-viewed_YouTube_videos";
+		str = checker.Normalize_URl(str);
+		Insert_Url(str);
+
+		str = "https://dmoz-odp.org";
+		str = checker.Normalize_URl(str);
+		Insert_Url(str);
 		
 	
 	}
@@ -204,6 +243,29 @@ public class Crawler_Db {
 		}
 
 	}
+	public void Update_Htmldoc (int id , String doc)
+	{
+		try {
+			String sql = "UPDATE Crawled_URLS SET Html_doc = ? ,Changed = true  WHERE (Url_ID = ? );"; // update doc of
+																									// current url
+
+			PreparedStatement pst;
+			pst = getC().prepareStatement(sql);
+			pst.setString(1, doc);
+			pst.setInt(2, id);
+			int done = pst.executeUpdate();
+
+			if (done > 0) {
+				//print("Update  " + done + " Record successfully " + "Thread " + Thread.currentThread().getName());
+			}
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+	
 
 	public void Update_Data(String url, String htmldoc, Set<Pair> ImgUrls) {
 		synchronized (o2) {
@@ -642,19 +704,21 @@ public class Crawler_Db {
 	public String Get_doc(int id) {
 		String doc = null;
 		
-
 		try {
 
 			String sql = "SELECT Html_doc FROM Crawled_URLS WHERE Url_ID = ? ;";
 
 			PreparedStatement pst = getC().prepareStatement(sql); // prepare select * query
 			pst.setInt(1, id);
-
 			ResultSet rs = pst.executeQuery();
-
-			rs.next();
-
-			doc = rs.getString(1);
+			boolean check  = rs.next();
+			if (check) {
+				doc = rs.getString(1);
+				
+			} else {
+				System.out.println("ResultSet in empty in Java at ID = " + id);
+				doc = "";
+			}
 
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -667,15 +731,18 @@ public class Crawler_Db {
 	
 
 	public static void main(String[] args) throws SQLException {
-		
+		String URL = "";
+		// https://dmoz-odp.org/News/Breaking_News/
+		// URL = "https://www.goal.com/en-us";
+		// URL = "https://www.apple.com/eg/music/";
 		Crawler_Db db = new Crawler_Db();
 
 		db.connect();
-		db.Reset();
-		db.Insert_seeds();
 		
-		db.Set_no_Crawling();
-		
+		//db.Insert_seeds();
+		//db.Reset();
+		//db.Set_no_Crawling();
+		print(db.Get_Next_URl());
 		db.close();
 
 	}

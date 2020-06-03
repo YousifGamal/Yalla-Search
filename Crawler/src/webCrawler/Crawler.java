@@ -26,7 +26,7 @@ public class Crawler {
 	public boolean Crawl(String url_string) { // this function take a url and get html document and extract links on
 												// this page
 
-		System.out.println("\n**Visiting** Received web page at " + url_string + " of size = " + url_string.length());
+		//System.out.println("\n**Visiting** Received web page at " + url_string + " of size = " + url_string.length());
 
 		Document htmlDocument = null;
 		try {
@@ -38,13 +38,18 @@ public class Crawler {
 			return false;
 		}
 		
+		 
 		URLDocument = htmlDocument.toString();
 		//print(URLDocument);
 		if (! URLDocument.contains("</html>"))
 		{
+			print(" xml doc");
 			return false;
 			
 		}
+		
+		
+		URLDocument = document_Clean(htmlDocument);
 		Elements links = htmlDocument.select("a[href]");
 		Elements media = htmlDocument.body().getElementsByTag("img");
 		if(links != null)
@@ -77,27 +82,6 @@ public class Crawler {
 	}
 
 	public boolean check_Image_Area(String imgurl) {
-		/*
-		Image img = null;
-		try {
-			img = ImageIO.read(new URL(imgurl));
-		} catch (MalformedURLException e1) {
-			// e1.printStackTrace();
-			return false;
-		} catch (IOException e1) {
-
-			// e1.printStackTrace();
-			return false;
-		}
-		if (img != null) {
-			// to get rid from the small , thin images
-			if (img.getWidth(null) < 70 | img.getHeight(null) < 70) {
-				return false;
-			} else {
-				return true;
-			}
-		}
-		return false;*/
 		
 		InputStream stream;
 		try {
@@ -201,7 +185,7 @@ public class Crawler {
 
 			}
 		}
-		print("taken imgs " + counter + " / " + media.size());
+		//print("taken imgs " + counter + " / " + media.size());
 
 	}
 
@@ -221,6 +205,53 @@ public class Crawler {
 
 	static void print(Object s) {
 		System.out.println(s); // helper fumction to print
+	}
+	
+	public String document_Clean(Document doc) {
+		Elements data;
+		String newdoc = "";
+		
+		data = doc.select("meta[name=description]");
+		newdoc = newdoc + data;
+
+		data = doc.select("title");
+		newdoc = newdoc + data;
+
+		data = doc.getElementsByAttribute("pubdate");
+		newdoc = newdoc + data;
+
+		data = doc.getElementsByAttribute("itemprop");
+		newdoc = newdoc + data;
+
+		data = doc.select("h1");
+		newdoc = newdoc + data;
+
+		data = doc.select("h2");
+		newdoc = newdoc + data;
+
+		data = doc.select("h3");
+		newdoc = newdoc + data;
+
+		data = doc.select("h4");
+		newdoc = newdoc + data;
+
+		data = doc.select("h5");
+		newdoc = newdoc + data;
+
+		data = doc.select("h6");
+		newdoc = newdoc + data;
+
+		data = doc.select("b");
+		newdoc = newdoc + data;
+
+		data = doc.select("p");
+		newdoc = newdoc + data;
+
+		data = doc.select("strong");
+		newdoc = newdoc + data;
+
+		return newdoc;
+
 	}
 
 }
