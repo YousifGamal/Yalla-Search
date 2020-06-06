@@ -174,27 +174,15 @@ public class Indexer implements Runnable{
 		try {
 			System.out.println("Document = "+String.valueOf(docID)+" parsing "+String.valueOf(total_words));
 			if(total_words > 0) {
-			newDoc = db.insertNewDocument(docID, total_words,finalWords, finalTags, finalPosition, df,publishedDate,pageDescription,pageTitle);
+			newDoc = db.insertNewDocument(docID, total_words,finalWords, finalTags, 
+					finalPosition, df,publishedDate,pageDescription,pageTitle);
 			}
 			//db.testFn(finalWords, docID, finalTags, finalPosition, newDoc, df);
 		} catch (SQLException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-        /*for(int i = 0; i < finalWords.size(); i++) {
-        try {
-			db.insertNewWord(finalWords.get(i), docID, finalTags.get(i), finalPosition.get(i), newDoc, df.get(i));
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}	
-    	//System.out.println(finalWords.get(i));
-    	//System.out.println(df.get(i));
-    	//System.out.println(finalPosition.get(i));
-    	//System.out.println(finalTags.get(i).toString());
-        	
-    	
-    	}*/
+        
         System.out.println("Document = "+String.valueOf(docID)+" is done");
         
 
@@ -432,7 +420,7 @@ public class Indexer implements Runnable{
 		dataBase db = new dataBase("testdb");
 		List<Object> docs= new ArrayList<Object>();
 		List<Object> imgs= new ArrayList<Object>();
-		int maxIterations = 100;
+		int maxIterations = 20;
 		
 		int it = 0;
 		boolean noDocs = false;
@@ -454,10 +442,10 @@ public class Indexer implements Runnable{
 				imgIds.add((int)imgs.get(j));
 				ALTs.add((String)imgs.get(j+1));
 			}
-			//make thread for the 10 images
+			//make thread for the 50 images
 			threads.add(new Thread (new Indexer(imgDB,null,0,ALTs,imgIds,false)));
 			
-			//get 10 documents
+			//get n documents
 			docs =  docDB.getDocuments();
 			if(docs.size() <= 0) {
 				noDocs = true;

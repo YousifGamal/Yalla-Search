@@ -12,17 +12,17 @@ import java.util.List;
 
 public class dataBase {
 	private Object o1 = new Object();
-	private Object o2 = new Object();
+	
 	private String Db_name;
 	private Connection c = null;
-	//final static String url1 = "jdbc:mysql://localhost:3306/" + Db_name;
     final static String user = "jimmy";
     final static String password = "jimmy";
-    //private static Statement stmt = null;
+    
 	
     public dataBase(String Db_name) {
 		//set url for this data base object	
     	String url = "jdbc:mysql://localhost:3306/" + Db_name;
+    	this.Db_name = Db_name;
 		this.connect(url);
            
     }
@@ -286,56 +286,15 @@ public class dataBase {
 		c.setAutoCommit(true);
 	}
 	
-	public void testFn() throws SQLException, ParseException{
-		String query = "INSERT INTO .documents(documentID, pageRank, wordsNumber, publishedDate) "
-				+ "VALUES (?, ?, ?, ?);";
-	PreparedStatement pst = c.prepareStatement(query); // prepare insert query
-	 
-	pst.setInt(1, 1);
-	pst.setFloat(2, (float) .25);
-	pst.setInt(3, 50);
-	String W="2002-11-30";
-    Date date1=new SimpleDateFormat("yyyy-MM-dd").parse(W);
-	pst.setString(4, W);
-	int done = pst.executeUpdate();
-					
-}
+	
 	
 	public static void main(String[] args) throws SQLException, ParseException {
 		// TODO Auto-generated method stub
-		dataBase db = new dataBase("testdb");
-		db.testFn();
 		
 		
-		/*
-		List<String> finalWords = new ArrayList<String>();
-        List<String> finalPosition = new ArrayList<String>();
-        List<ArrayList<Boolean> > finalTags = new ArrayList<ArrayList<Boolean> >();
-        List<Integer> occurrences = new ArrayList<Integer>();
-        List<Float> df = new ArrayList<Float>();
-		boolean doc1 = db.insertNewDocument(1, 3);
-		ArrayList<Boolean> tags = new ArrayList<Boolean>();
-		tags.add(true);
-		tags.add(true);
-		tags.add(false);
-		tags.add(true);
-		tags.add(false);
-		tags.add(false);
-		finalWords.add("jimmy");
-		finalWords.add("amr");
-		finalWords.add("gelesh"); */
-		/*
-		db.insertNewWord("jimmy", 1, tags, "1 4 5", doc1, (float).33);
-		db.insertNewWord("amr", 1, tags, "3 5", doc1, (float).33);
-		db.insertNewWord("gelesh", 1, tags, "7 8", doc1, (float).33);
 		
-		boolean doc2 = db.insertNewDocument(2, 3);
-		db.insertNewWord("jimmy", 2, tags, "2", doc2, (float).5);
-		db.insertNewWord("doda", 2, tags, "1", doc2, (float).5);
-		db.insertNewWord("gelesh", 2, tags, "7", doc2, (float).5);
-		db.insertNewWord("yosry", 2, tags, "10", doc2, (float).5);
 		
-*/
+		
 		
 		
 		
